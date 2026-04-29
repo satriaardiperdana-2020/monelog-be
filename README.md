@@ -34,3 +34,37 @@ CREATE TABLE transactions (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
+
+# Database Structure
+finance-app/
+├── cmd/
+│   └── api/
+│       └── main.go               # Entry point
+├── internal/
+│   ├── api/                      # Handler (gin/echo)
+│   │   ├── handler/
+│   │   │   ├── auth.go
+│   │   │   ├── transaction.go
+│   │   │   ├── category.go
+│   │   │   └── report.go
+│   │   └── middleware/
+│   │       └── auth.go           # Verifikasi token OAuth
+│   ├── db/                       # sqlc output
+│   │   ├── models.go
+│   │   ├── queries.sql.go
+│   │   └── db.go
+│   ├── repository/               # (opsional wrapper, bisa pakai langsung sqlc)
+│   ├── service/                  # business logic
+│   └── config/
+│       └── config.go             # env vars
+├── sql/
+│   ├── schema/
+│   │   └── 001_create_tables.sql
+│   ├── queries/
+│   │   └── queries.sql           # SQL queries untuk sqlc
+│   └── sqlc.yaml                 # konfigurasi sqlc
+├── api/
+│   └── openapi.yaml              # Spesifikasi OpenAPI 3.0
+├── go.mod
+├── go.sum
+└── .env
