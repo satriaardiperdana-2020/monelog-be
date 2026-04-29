@@ -39,7 +39,7 @@ CREATE TABLE transactions (
 # Database Structure
 
 ```text
-finance-app/
+monelog/
 ├── cmd/
 │   └── api/
 │       └── main.go               # Entry point
