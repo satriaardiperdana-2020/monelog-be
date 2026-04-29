@@ -36,6 +36,8 @@ CREATE TABLE transactions (
 ```
 
 # Database Structure
+
+```text
 finance-app/
 ├── cmd/
 │   └── api/
@@ -68,3 +70,4 @@ finance-app/
 ├── go.mod
 ├── go.sum
 └── .env
+```
