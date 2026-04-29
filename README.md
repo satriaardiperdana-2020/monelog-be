@@ -2,6 +2,8 @@
 Monelog is a personal finance tracking app designed to give you complete control over your cash flow. Focusing on simplicity and transparency, Monelog helps you record every income and expense instantly, without confusing features.
 
 #Database Structure
+
+```sql
 -- Tabel user (dari OAuth)
 CREATE TABLE users (
     id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -31,3 +33,4 @@ CREATE TABLE transactions (
     date        DATE NOT NULL,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+```
