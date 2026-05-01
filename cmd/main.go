@@ -1,34 +1,44 @@
 package main
 
 import (
-	"log"
-
-	"monelog/hello/internal/api"
-	"monelog/hello/internal/handlers"
-
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/satriaardiperdana-2020/monelog/internal/api"
+	"github.com/satriaardiperdana-2020/monelog/internal/config"
+	"github.com/satriaardiperdana-2020/monelog/internal/handlers"
+	authMiddleware "github.com/satriaardiperdana-2020/monelog/internal/middleware"
+	"github.com/satriaardiperdana-2020/monelog/internal/repository/postgresql"
+	"log"
 )
 
 func main() {
+	cfg, err := config.Load("config-development.yml")
+	if err != nil {
+		log.Fatal("Failed to load config:", err)
+	}
+
+	pool, err := db.NewConnection(cfg)
+	if err != nil {
+		log.Fatal("Failed to connect to database:", err)
+	}
+	queries := db.New(pool)
+
+	authHandler := &handlers.AuthHandler{Queries: queries, JWTSecret: []byte(cfg.JWT.Secret)}
+	txHandler := &handlers.TransactionHandler{Queries: queries}
 
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	// 1. Inisialisasi handler yang sudah kita buat
-	txHandler := handlers.NewTransactionHandler()
+	// Public routes (no JWT middleware)
+	e.POST("/auth/register", authHandler.Register)
+	e.POST("/auth/login", authHandler.Login)
 
-	// 2. Konversi ke strict handler (sesuai dengan opsi generate)
-	strictHandler := api.NewStrictHandler(txHandler, nil) // Nilai kedua untuk error handler (opsional)
+	// Protected routes
+	apiGroup := e.Group("/api/v1")
+	apiGroup.Use(authMiddleware.JWTAuth([]byte(cfg.JWT.Secret)))
+	strictHandler := api.NewStrictHandler(txHandler, nil)
+	api.RegisterHandlers(apiGroup, strictHandler)
 
-	// 3. Daftarkan handler ke Echo router
-
-	// Fungsi RegisterHandlers ini di-generate oleh oapi-codegen
-
-	api.RegisterHandlers(e, strictHandler)
-
-	// 4. Jalankan server
-	log.Fatal(e.Start(":8080"))
-
+	log.Fatal(e.Start(":" + cfg.Server.Port))
 }

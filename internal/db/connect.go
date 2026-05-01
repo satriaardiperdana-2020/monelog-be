@@ -3,7 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
-	"monelog/hello/internal/config"
+	"github.com/satriaardiperdana-2020/monelog/internal/config"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
