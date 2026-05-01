@@ -1,13 +1,14 @@
--- Tabel user (dari OAuth)
+-- Tabel users dengan password_hash untuk login lokal
 CREATE TABLE users (
-    id          BIGSERIAL PRIMARY KEY,
-    email       VARCHAR(255) UNIQUE NOT NULL,
-    name        VARCHAR(255),
-    picture     TEXT,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id            BIGSERIAL PRIMARY KEY,
+    email         VARCHAR(255) UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    name          VARCHAR(255),
+    picture       TEXT,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Tabel kategori (per user)
+-- Tabel kategori
 CREATE TABLE categories (
     id          BIGSERIAL PRIMARY KEY,
     user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -17,7 +18,7 @@ CREATE TABLE categories (
     UNIQUE(user_id, name, type)
 );
 
--- Tabel transaksi (pemasukan/pengeluaran)
+-- Tabel transaksi
 CREATE TABLE transactions (
     id          BIGSERIAL PRIMARY KEY,
     user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
