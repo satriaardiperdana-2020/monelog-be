@@ -3,7 +3,7 @@ CREATE TABLE users (
     id            BIGSERIAL PRIMARY KEY,
     email         VARCHAR(255) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    name          VARCHAR(255),
+    name          VARCHAR(255) NOT NULL,
     picture       TEXT,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

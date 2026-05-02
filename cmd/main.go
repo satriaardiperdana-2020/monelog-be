@@ -17,11 +17,11 @@ func main() {
 		log.Fatal("Failed to load config:", err)
 	}
 
-	pool, err := db.NewConnection(cfg)
+	pool, err := postgresql.NewConnection(cfg)
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
-	queries := db.New(pool)
+	queries := postgresql.New(pool)
 
 	authHandler := &handlers.AuthHandler{Queries: queries, JWTSecret: []byte(cfg.JWT.Secret)}
 	txHandler := &handlers.TransactionHandler{Queries: queries}

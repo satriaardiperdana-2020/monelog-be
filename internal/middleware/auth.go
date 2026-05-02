@@ -1,12 +1,17 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
+
+type contextKey string
+
+const UserIDKey contextKey = "user_id"
 
 func JWTAuth(secret []byte) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -29,6 +34,8 @@ func JWTAuth(secret []byte) echo.MiddlewareFunc {
 			}
 			userID := int64(claims["user_id"].(float64))
 			c.Set("user_id", userID)
+			ctx := context.WithValue(c.Request().Context(), UserIDKey, userID)
+			c.SetRequest(c.Request().WithContext(ctx))
 			return next(c)
 		}
 	}

@@ -9,4 +9,4 @@ database:
   name: monelog
 
 jwt:
-  secret: rahasia12345gantiiniserius
+  secret: rahasia12345

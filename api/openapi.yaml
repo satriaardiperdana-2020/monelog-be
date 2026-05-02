@@ -2,7 +2,6 @@ openapi: 3.0.3
 info:
   title: Monelog API
   version: 1.0.0
-  description: API untuk aplikasi catatan keuangan.
 components:
   securitySchemes:
     BearerAuth:
@@ -10,147 +9,31 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
-    # --- Transaction schemas (existing) ---
     Transaction:
       type: object
       properties:
-        id:
-          type: integer
-          format: int64
-        user_id:
-          type: integer
-          format: int64
-        category_id:
-          type: integer
-          format: int64
-        amount:
-          type: integer
-          format: int64
-          description: Nominal dalam satuan rupiah
-        note:
-          type: string
-        date:
-          type: string
-          format: date
-        created_at:
-          type: string
-          format: date-time
+        id: { type: integer, format: int64 }
+        user_id: { type: integer, format: int64 }
+        category_id: { type: integer, format: int64 }
+        amount: { type: integer, format: int64 }
+        note: { type: string }
+        date: { type: string, format: date }
+        created_at: { type: string, format: date-time }
       required: [id, user_id, category_id, amount, date]
     CreateTransactionRequest:
       type: object
       properties:
-        category_id:
-          type: integer
-          format: int64
-        amount:
-          type: integer
-          format: int64
-        date:
-          type: string
-          format: date
-        note:
-          type: string
+        category_id: { type: integer, format: int64 }
+        amount: { type: integer, format: int64 }
+        date: { type: string, format: date }
+        note: { type: string }
       required: [category_id, amount, date]
-
-    # --- Auth schemas (new) ---
-    User:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        email:
-          type: string
-        name:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-      required: [id, email, name]
-    RegisterRequest:
-      type: object
-      properties:
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-        name:
-          type: string
-      required: [email, password, name]
-    LoginRequest:
-      type: object
-      properties:
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-      required: [email, password]
-    AuthResponse:
-      type: object
-      properties:
-        token:
-          type: string
-        user:
-          $ref: '#/components/schemas/User'
-      required: [token, user]
-
 security:
-  - BearerAuth: []   # Default security for all endpoints
-
+  - BearerAuth: []
 paths:
-  # --- Auth endpoints (public, no security) ---
-  /auth/register:
-    post:
-      operationId: register
-      summary: Register a new user
-      tags:
-        - Auth
-      security: []   # explicitly no security
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RegisterRequest'
-      responses:
-        '201':
-          description: User registered successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '409':
-          description: Email already exists
-  /auth/login:
-    post:
-      operationId: login
-      summary: Login user
-      tags:
-        - Auth
-      security: []   # explicitly no security
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoginRequest'
-      responses:
-        '200':
-          description: User logged in successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '401':
-          description: Invalid email or password
-
-  # --- Transaction endpoints (protected by BearerAuth) ---
   /transactions:
     post:
       operationId: createTransaction
-      summary: Membuat transaksi baru
       requestBody:
         required: true
         content:
@@ -159,32 +42,25 @@ paths:
               $ref: '#/components/schemas/CreateTransactionRequest'
       responses:
         '201':
-          description: Transaksi berhasil dibuat
+          description: Created
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Transaction'
-        '400':
-          description: Request tidak valid
     get:
       operationId: getTransactions
-      summary: Mendapatkan daftar transaksi berdasarkan rentang tanggal
       parameters:
         - name: from
           in: query
           required: true
-          schema:
-            type: string
-            format: date
+          schema: { type: string, format: date }
         - name: to
           in: query
           required: true
-          schema:
-            type: string
-            format: date
+          schema: { type: string, format: date }
       responses:
         '200':
-          description: Daftar transaksi berhasil diambil
+          description: OK
           content:
             application/json:
               schema:
