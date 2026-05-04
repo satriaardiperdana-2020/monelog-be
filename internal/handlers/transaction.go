@@ -41,7 +41,7 @@ func toApiTransaction(tx postgresql.Transaction) api.Transaction {
 		CategoryId: tx.CategoryID,
 		Amount:     tx.Amount,
 		Note:       notePtr,
-		Date:       dateVal, // ✅ tipe openapi_types.Date
+		Date:       dateVal,
 		CreatedAt:  &tx.CreatedAt,
 	}
 }
@@ -52,14 +52,9 @@ func (h *TransactionHandler) CreateTransaction(ctx context.Context, request api.
 	if userIDVal == nil {
 		return nil, &echo.HTTPError{Code: http.StatusUnauthorized, Message: "Missing user_id"}
 	}
-	// request.Body.Date bertipe string (dari OpenAPI)
 
 	userID := userIDVal.(int64)
 	date := request.Body.Date.Time
-
-	/*if err != nil {
-		return nil, ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid date format, use YYYY-MM-DD"})
-	}*/
 
 	var noteText pgtype.Text
 	if request.Body.Note != nil && *request.Body.Note != "" {
@@ -110,4 +105,42 @@ func (h *TransactionHandler) GetTransactions(ctx context.Context, request api.Ge
 		apiTransactions[i] = toApiTransaction(tx)
 	}
 	return api.GetTransactions200JSONResponse(apiTransactions), nil
+}
+
+func (h *TransactionHandler) UpdateTransaction(ctx context.Context, request api.UpdateTransactionRequestObject) (api.UpdateTransactionResponseObject, error) {
+	userID := ctx.Value(middleware.UserIDKey).(int64)
+
+	// Konversi date
+	date := request.Body.Date.Time
+
+	// Note bisa nil, konversi ke pgtype.Text
+	var noteText pgtype.Text
+	if request.Body.Note != nil && *request.Body.Note != "" {
+		noteText = pgtype.Text{String: *request.Body.Note, Valid: true}
+	}
+
+	tx, err := h.Queries.UpdateTransaction(ctx, postgresql.UpdateTransactionParams{
+		ID:         request.Id,
+		UserID:     userID,
+		CategoryID: request.Body.CategoryId,
+		Amount:     request.Body.Amount,
+		Note:       noteText,
+		Date:       pgtype.Date{Time: date, Valid: true},
+	})
+	if err != nil {
+		return nil, echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return api.UpdateTransaction200JSONResponse(toApiTransaction(tx)), nil
+}
+
+func (h *TransactionHandler) SoftDeleteTransaction(ctx context.Context, request api.SoftDeleteTransactionRequestObject) (api.SoftDeleteTransactionResponseObject, error) {
+	userID := ctx.Value(middleware.UserIDKey).(int64)
+	err := h.Queries.SoftDeleteTransaction(ctx, postgresql.SoftDeleteTransactionParams{
+		ID:     request.Id,
+		UserID: userID,
+	})
+	if err != nil {
+		return nil, echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return api.SoftDeleteTransaction204Response{}, nil
 }

@@ -5,7 +5,8 @@ CREATE TABLE users (
     password_hash TEXT NOT NULL,
     name          VARCHAR(255) NOT NULL,
     picture       TEXT,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    is_deleted    BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- Tabel kategori
@@ -26,5 +27,6 @@ CREATE TABLE transactions (
     amount      BIGINT NOT NULL,
     note        TEXT,
     date        DATE NOT NULL,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    is_deleted  BOOLEAN NOT NULL DEFAULT FALSE
 );

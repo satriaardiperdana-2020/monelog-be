@@ -25,6 +25,13 @@ func main() {
 
 	authHandler := &handlers.AuthHandler{Queries: queries, JWTSecret: []byte(cfg.JWT.Secret)}
 	txHandler := &handlers.TransactionHandler{Queries: queries}
+	catHandler := &handlers.CategoryHandler{Queries: queries}
+	userHandler := &handlers.UserHandler{Queries: queries}
+	server := &handlers.Server{
+		Transaction: txHandler,
+		Category:    catHandler,
+		User:        userHandler,
+	}
 
 	e := echo.New()
 	e.Use(middleware.Logger())
@@ -37,7 +44,7 @@ func main() {
 	// Protected routes
 	apiGroup := e.Group("/api/v1")
 	apiGroup.Use(authMiddleware.JWTAuth([]byte(cfg.JWT.Secret)))
-	strictHandler := api.NewStrictHandler(txHandler, nil)
+	strictHandler := api.NewStrictHandler(server, nil)
 	api.RegisterHandlers(apiGroup, strictHandler)
 
 	log.Fatal(e.Start(":" + cfg.Server.Port))

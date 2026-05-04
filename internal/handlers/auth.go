@@ -73,7 +73,7 @@ func (h *AuthHandler) Register(c echo.Context) error {
 		User: struct {
 			ID        int64     `json:"id"`
 			Email     string    `json:"email"`
-			Name      string    `json:"name"`
+			Name      string    `json:"name"` //
 			CreatedAt time.Time `json:"created_at"`
 		}{
 			ID:        user.ID,

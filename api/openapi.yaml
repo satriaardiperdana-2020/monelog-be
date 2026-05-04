@@ -28,6 +28,35 @@ components:
         date: { type: string, format: date }
         note: { type: string }
       required: [category_id, amount, date]
+    UpdateTransactionRequest:
+      type: object
+      properties:
+        category_id: { type: integer, format: int64 }
+        amount: { type: integer, format: int64 }
+        date: { type: string, format: date }
+        note: { type: string }
+      required: [category_id, amount, date]
+    Category:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        user_id: { type: integer, format: int64 }
+        name: { type: string }
+        type: { type: string, enum: [income, expense] }
+        created_at: { type: string, format: date-time }
+      required: [id, user_id, name, type]
+    CreateCategoryRequest:
+      type: object
+      properties:
+        name: { type: string }
+        type: { type: string, enum: [income, expense] }
+      required: [name, type]
+    UpdateCategoryRequest:
+      type: object
+      properties:
+        name: { type: string }
+        type: { type: string, enum: [income, expense] }
+      required: [name, type]
 security:
   - BearerAuth: []
 paths:
@@ -38,15 +67,9 @@ paths:
         required: true
         content:
           application/json:
-            schema:
-              $ref: '#/components/schemas/CreateTransactionRequest'
+            schema: { $ref: '#/components/schemas/CreateTransactionRequest' }
       responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Transaction'
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Transaction' } } } }
     get:
       operationId: getTransactions
       parameters:
@@ -59,11 +82,85 @@ paths:
           required: true
           schema: { type: string, format: date }
       responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Transaction'
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Transaction' } } } } }
+  /transactions/{id}:
+    put:
+      operationId: updateTransaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateTransactionRequest' }
+      responses:
+        '200': { description: Updated, content: { application/json: { schema: { $ref: '#/components/schemas/Transaction' } } } }
+        '404': { description: Not found }
+    delete:
+      operationId: softDeleteTransaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '204': { description: Soft deleted }
+        '404': { description: Not found }
+  /categories:
+    post:
+      operationId: createCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateCategoryRequest' }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Category' } } } }
+    get:
+      operationId: getCategories
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Category' } } } } }
+  /categories/{id}:
+    put:
+      operationId: updateCategory
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateCategoryRequest' }
+      responses:
+        '200': { description: Updated, content: { application/json: { schema: { $ref: '#/components/schemas/Category' } } } }
+        '404': { description: Not found }
+    delete:
+      operationId: deleteCategory
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '204': { description: Deleted }
+        '404': { description: Not found }
+  /users/{id}:
+    patch:
+      operationId: softDeleteUser
+      summary: Soft delete a user (set is_deleted=true)
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '204': { description: User soft deleted successfully }
+        '403': { description: Forbidden - cannot delete other user }
+        '404': { description: User not found or already deleted }
