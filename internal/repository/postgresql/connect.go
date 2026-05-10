@@ -3,7 +3,7 @@ package postgresql
 import (
 	"context"
 	"fmt"
-	"github.com/satriaardiperdana-2020/monelog/internal/config"
+	"github.com/satriaardiperdana-2020/monelog-be/internal/config"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )

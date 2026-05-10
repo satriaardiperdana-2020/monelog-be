@@ -30,3 +30,9 @@ CREATE TABLE transactions (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     is_deleted  BOOLEAN NOT NULL DEFAULT FALSE
 );
+
+CREATE TABLE blacklisted_tokens (
+                                    jti  TEXT PRIMARY KEY,
+                                    expires_at TIMESTAMPTZ NOT NULL,
+                                    created_at TIMESTAMPTZ DEFAULT NOW()
+);

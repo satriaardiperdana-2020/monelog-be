@@ -2,13 +2,40 @@ openapi: 3.0.3
 info:
   title: Monelog API
   version: 1.0.0
+
 components:
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
   schemas:
+    User:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        email: { type: string }
+        name: { type: string }
+        created_at: { type: string, format: date-time }
+    RegisterRequest:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 6 }
+        name: { type: string }
+      required: [email, password, name]
+    LoginRequest:
+      type: object
+      properties:
+        email: { type: string }
+        password: { type: string }
+      required: [email, password]
+    AuthResponse:
+      type: object
+      properties:
+        token: { type: string }
+        user: { $ref: '#/components/schemas/User' }
     Transaction:
       type: object
       properties:
@@ -19,7 +46,6 @@ components:
         note: { type: string }
         date: { type: string, format: date }
         created_at: { type: string, format: date-time }
-      required: [id, user_id, category_id, amount, date]
     CreateTransactionRequest:
       type: object
       properties:
@@ -44,7 +70,6 @@ components:
         name: { type: string }
         type: { type: string, enum: [income, expense] }
         created_at: { type: string, format: date-time }
-      required: [id, user_id, name, type]
     CreateCategoryRequest:
       type: object
       properties:
@@ -57,58 +82,80 @@ components:
         name: { type: string }
         type: { type: string, enum: [income, expense] }
       required: [name, type]
+    DailySummary:
+      type: object
+      properties:
+        date: { type: string, format: date }
+        total_income: { type: integer, format: int64 }
+        total_expense: { type: integer, format: int64 }
+        balance: { type: integer, format: int64 }
+    TransactionDetail:
+      type: object
+      properties:
+        date: { type: string, format: date }
+        category_name: { type: string }
+        category_type: { type: string }
+        note: { type: string }
+        total_income: { type: integer, format: int64 }
+        total_expense: { type: integer, format: int64 }
+        balance: { type: integer, format: int64 }
+
 security:
   - BearerAuth: []
+
 paths:
-  /transactions:
+  /auth/register:
     post:
-      operationId: createTransaction
+      operationId: register
+      security: []
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/CreateTransactionRequest' }
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
       responses:
-        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Transaction' } } } }
-    get:
-      operationId: getTransactions
-      parameters:
-        - name: from
-          in: query
-          required: true
-          schema: { type: string, format: date }
-        - name: to
-          in: query
-          required: true
-          schema: { type: string, format: date }
-      responses:
-        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Transaction' } } } } }
-  /transactions/{id}:
-    put:
-      operationId: updateTransaction
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: integer, format: int64 }
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+  /auth/login:
+    post:
+      operationId: login
+      security: []
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/UpdateTransactionRequest' }
+            schema: { $ref: '#/components/schemas/LoginRequest' }
       responses:
-        '200': { description: Updated, content: { application/json: { schema: { $ref: '#/components/schemas/Transaction' } } } }
-        '404': { description: Not found }
-    delete:
-      operationId: softDeleteTransaction
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+
+  /users/{id}:
+    patch:
+      operationId: softDeleteUser
+      summary: Soft delete a user (set is_deleted=true)
+      security:
+        - BearerAuth: [ ]
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: integer, format: int64 }
+          schema:
+            type: integer
+            format: int64
       responses:
-        '204': { description: Soft deleted }
-        '404': { description: Not found }
+        '204':
+          description: User soft deleted successfully
+        '403':
+          description: Forbidden – cannot delete other user
+        '404':
+          description: User not found or already deleted
+
   /categories:
     post:
       operationId: createCategory
@@ -118,11 +165,21 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/CreateCategoryRequest' }
       responses:
-        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Category' } } } }
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Category' }
     get:
       operationId: getCategories
       responses:
-        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Category' } } } } }
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Category' }
   /categories/{id}:
     put:
       operationId: updateCategory
@@ -137,8 +194,11 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/UpdateCategoryRequest' }
       responses:
-        '200': { description: Updated, content: { application/json: { schema: { $ref: '#/components/schemas/Category' } } } }
-        '404': { description: Not found }
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Category' }
     delete:
       operationId: deleteCategory
       parameters:
@@ -148,19 +208,137 @@ paths:
           schema: { type: integer, format: int64 }
       responses:
         '204': { description: Deleted }
-        '404': { description: Not found }
-  /users/{id}:
-    patch:
-      operationId: softDeleteUser
-      summary: Soft delete a user (set is_deleted=true)
-      security:
-        - BearerAuth: [ ]
+
+  /transactions:
+    post:
+      operationId: createTransaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateTransactionRequest' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Transaction' }
+#    get:
+#      operationId: getTransactions
+#      parameters:
+#        - name: from
+#          in: query
+#          required: false
+#          schema: { type: string, format: date }
+#        - name: to
+#          in: query
+#          required: false
+#          schema: { type: string, format: date }
+#      responses:
+#        '200':
+#          description: OK
+#          content:
+#            application/json:
+#              schema:
+#                type: array
+#                items: { $ref: '#/components/schemas/Transaction' }
+  /transactions/{id}:
+    put:
+      operationId: updateTransaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateTransactionRequest' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Transaction' }
+    delete:
+      operationId: softDeleteTransaction
       parameters:
         - name: id
           in: path
           required: true
           schema: { type: integer, format: int64 }
       responses:
-        '204': { description: User soft deleted successfully }
-        '403': { description: Forbidden - cannot delete other user }
-        '404': { description: User not found or already deleted }
+        '204': { description: Deleted }
+        '404': { description: Not found }
+
+  /reports/main-summary:
+    get:
+      operationId: getMainPageSummary
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/DailySummary' }
+
+  /reports/details-by-date:
+    get:
+      operationId: getTransactionDetailsByDate
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TransactionDetail' }
+
+  /reports/last7days:
+    get:
+      operationId: getLast7DaysDetail
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TransactionDetail' }
+
+  /reports/last30days:
+    get:
+      operationId: getLast30DaysDetail
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TransactionDetail' }
+
+  /reports/date-range:
+    get:
+      operationId: getTransactionsBetweenDatesWithNote
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          required: true
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TransactionDetail' }
