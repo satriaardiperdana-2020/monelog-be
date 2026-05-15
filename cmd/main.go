@@ -52,7 +52,7 @@ func main() {
 	e.Use(middleware.Recover())
 	// CORS configuration – allows frontend origin (adjust as needed)
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"http://localhost", "http://10.222.136.79:8080"}, // Vue dev server
+		AllowOrigins:     []string{"http://localhost:5173", "http://10.222.136.79:8080"}, // Vue dev server
 		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodPatch, http.MethodOptions},
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
